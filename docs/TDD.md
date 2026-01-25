@@ -2,11 +2,11 @@
 
 ## ChatGPT ToDo App with AI Task Decomposition
 
-| **Document Version** | 1.0 |
-|----------------------|-----|
-| **Last Updated** | January 2026 |
-| **Status** | Draft |
-| **Related PRD** | PRD v1.0 |
+|**Document Version**|1.0|
+|---|---|
+|**Last Updated**|January 2026|
+|**Status**|Draft|
+|**Related PRD**|PRD v1.0|
 
 ---
 
@@ -20,27 +20,27 @@ The system exposes task management capabilities as MCP tools that ChatGPT can in
 
 ### 1.2 Key Technical Decisions
 
-| Decision | Choice | Justification |
-|----------|--------|---------------|
-| **Protocol** | MCP over Streamable HTTP | Recommended by Apps SDK; supports bidirectional streaming for real-time UI updates |
-| **Data Storage** | SQLite | Zero-configuration, file-based; ideal for single-user learning project; built into Python |
-| **Server Framework** | uvicorn + MCP SDK | ASGI server provides async support; MCP SDK handles protocol compliance |
-| **Data Validation** | Pydantic 2.x | Type safety, automatic JSON Schema generation for tool definitions |
-| **UI Approach** | Inline Cards (HTML) | Lightweight, renders within conversation; follows Apps SDK guidelines |
-| **Architecture Pattern** | Layered Architecture | Clear separation of concerns; easier to understand for learning purposes |
+|Decision|Choice|Justification|
+|---|---|---|
+|**Protocol**|MCP over Streamable HTTP|Recommended by Apps SDK; supports bidirectional streaming for real-time UI updates|
+|**Data Storage**|SQLite|Zero-configuration, file-based; ideal for single-user learning project; built into Python|
+|**Server Framework**|uvicorn + MCP SDK|ASGI server provides async support; MCP SDK handles protocol compliance|
+|**Data Validation**|Pydantic 2.x|Type safety, automatic JSON Schema generation for tool definitions|
+|**UI Approach**|Inline Cards (HTML)|Lightweight, renders within conversation; follows Apps SDK guidelines|
+|**Architecture Pattern**|Layered Architecture|Clear separation of concerns; easier to understand for learning purposes|
 
 ### 1.3 Tech Stack
 
-| Component | Technology | Version | Justification |
-|-----------|------------|---------|---------------|
-| Runtime | Python | 3.10+ | Modern async support, pattern matching, type hints |
-| MCP Implementation | mcp | Latest | Official Python SDK for Model Context Protocol |
-| HTTP Server | uvicorn | 0.27+ | High-performance ASGI server, async-native |
-| Data Validation | Pydantic | 2.x | Automatic schema generation, runtime validation |
-| Database | SQLite | Built-in | Zero setup, ACID-compliant, sufficient for single-user |
-| Testing | pytest | 8.x | Industry standard, excellent async support |
-| Linting | ruff | Latest | Fast, comprehensive Python linter |
-| Type Checking | mypy | Latest | Static type verification |
+|Component|Technology|Version|Justification|
+|---|---|---|---|
+|Runtime|Python|3.10+|Modern async support, pattern matching, type hints|
+|MCP Implementation|mcp|Latest|Official Python SDK for Model Context Protocol|
+|HTTP Server|uvicorn|0.27+|High-performance ASGI server, async-native|
+|Data Validation|Pydantic|2.x|Automatic schema generation, runtime validation|
+|Database|SQLite|Built-in|Zero setup, ACID-compliant, sufficient for single-user|
+|Testing|pytest|8.x|Industry standard, excellent async support|
+|Linting|ruff|Latest|Fast, comprehensive Python linter|
+|Type Checking|mypy|Latest|Static type verification|
 
 ---
 
@@ -79,12 +79,12 @@ flowchart TB
 
 #### Component Responsibilities
 
-| Component | Responsibility |
-|-----------|----------------|
-| **Server Entry Point** | Initialize MCP server, register tools, handle HTTP transport |
-| **Tools Layer** | Define tool schemas, implement business logic, coordinate responses |
-| **Database Layer** | CRUD operations, connection management, query execution |
-| **UI Components** | Generate HTML for inline cards, handle display formatting |
+|Component|Responsibility|
+|---|---|
+|**Server Entry Point**|Initialize MCP server, register tools, handle HTTP transport|
+|**Tools Layer**|Define tool schemas, implement business logic, coordinate responses|
+|**Database Layer**|CRUD operations, connection management, query execution|
+|**UI Components**|Generate HTML for inline cards, handle display formatting|
 
 #### Primary Data Flow
 
@@ -111,17 +111,19 @@ sequenceDiagram
 
 **Interfaces:**
 
-| Interface | Type | Description |
-|-----------|------|-------------|
-| Input | HTTP POST | MCP protocol messages (list_tools, call_tool) |
-| Output | HTTP Response | JSON-RPC responses with tool results and UI resources |
+|Interface|Type|Description|
+|---|---|---|
+|Input|HTTP POST|MCP protocol messages (list_tools, call_tool)|
+|Output|HTTP Response|JSON-RPC responses with tool results and UI resources|
 
 **Dependencies:**
+
 - `mcp` SDK for protocol handling
 - `uvicorn` for HTTP server
 - `tools/` module for tool definitions
 
 **Implementation Considerations:**
+
 - Use async/await throughout for non-blocking I/O
 - Configure CORS for local development
 - Implement graceful shutdown handling
@@ -150,20 +152,22 @@ async def call_tool(name: str, arguments: dict) -> CallToolResult:
 
 **Interfaces:**
 
-| Tool | Input Schema | Output |
-|------|--------------|--------|
-| `add_task` | `{title: str, parent_id?: int}` | Task object + inline card |
-| `list_tasks` | `{filter?: str, parent_id?: int}` | Task array + list card |
-| `complete_task` | `{task_id: int}` | Updated task + confirmation card |
-| `delete_task` | `{task_id: int}` | Deletion confirmation |
-| `decompose_task` | `{task_id: int, count?: int}` | Subtasks array + hierarchy card |
+|Tool|Input Schema|Output|
+|---|---|---|
+|`add_task`|`{title: str, parent_id?: int}`|Task object + inline card|
+|`list_tasks`|`{filter?: str, parent_id?: int}`|Task array + list card|
+|`complete_task`|`{task_id: int}`|Updated task + confirmation card|
+|`delete_task`|`{task_id: int}`|Deletion confirmation|
+|`decompose_task`|`{task_id: int, count?: int}`|Subtasks array + hierarchy card|
 
 **Dependencies:**
+
 - `database/models.py` for data operations
 - `ui/components.py` for card generation
 - `pydantic` for schema definitions
 
 **Implementation Considerations:**
+
 - Each tool returns both data (for ChatGPT reasoning) and UI (for user display)
 - Validate all inputs before database operations
 - Handle edge cases (task not found, invalid parent_id)
@@ -186,10 +190,14 @@ class TaskRepository:
 ```
 
 **Dependencies:**
+
 - `sqlite3` (built-in)
 - `aiosqlite` for async operations
 
+**Why aiosqlite?** The MCP server uses async/await (uvicorn, async handlers). Standard SQLite is synchronous—it blocks the event loop during queries, preventing the server from handling other requests. `aiosqlite` wraps SQLite to work with async/await, allowing non-blocking database operations.
+
 **Implementation Considerations:**
+
 - Use connection pooling via context manager
 - Parameterized queries to prevent SQL injection
 - Cascade deletes for subtasks when parent is deleted
@@ -209,9 +217,11 @@ def render_task_hierarchy(parent: Task, subtasks: list[Task]) -> str
 ```
 
 **Dependencies:**
+
 - None (pure functions generating HTML strings)
 
 **Implementation Considerations:**
+
 - Follow Apps SDK UI Design System for colors, typography, spacing
 - Support both light and dark mode via CSS variables
 - Keep HTML minimal for fast rendering
@@ -227,13 +237,13 @@ def render_task_hierarchy(parent: Task, subtasks: list[Task]) -> str
 
 **Task**
 
-| Attribute | Type | Constraints | Description |
-|-----------|------|-------------|-------------|
-| `id` | INTEGER | PRIMARY KEY, AUTO | Unique task identifier |
-| `title` | TEXT | NOT NULL | Task description |
-| `completed` | BOOLEAN | DEFAULT FALSE | Completion status |
-| `created_at` | TIMESTAMP | DEFAULT NOW | Creation timestamp |
-| `parent_id` | INTEGER | FK → tasks.id, NULLABLE | Parent task for subtasks |
+|Attribute|Type|Constraints|Description|
+|---|---|---|---|
+|`id`|INTEGER|PRIMARY KEY, AUTO|Unique task identifier|
+|`title`|TEXT|NOT NULL|Task description|
+|`completed`|BOOLEAN|DEFAULT FALSE|Completion status|
+|`created_at`|TIMESTAMP|DEFAULT NOW|Creation timestamp|
+|`parent_id`|INTEGER|FK → tasks.id, NULLABLE|Parent task for subtasks|
 
 #### Entity Relationship Diagram
 
@@ -278,6 +288,7 @@ class Task(TaskBase):
 #### Database Selection: SQLite
 
 **Justification:**
+
 - Zero configuration—no server process required
 - Single-file storage simplifies development and testing
 - Built into Python standard library
@@ -307,11 +318,13 @@ CREATE INDEX IF NOT EXISTS idx_tasks_parent_id ON tasks(parent_id);
 
 #### Indexing Strategy
 
-| Index | Columns | Purpose |
-|-------|---------|---------|
-| Primary | `id` | Auto-created, fast lookups |
-| `idx_tasks_completed` | `completed` | Filter by status |
-| `idx_tasks_parent_id` | `parent_id` | Subtask queries, cascade deletes |
+|Index|Columns|Purpose|
+|---|---|---|
+|Primary|`id`|Auto-created, fast lookups|
+|`idx_tasks_completed`|`completed`|Filter by status|
+|`idx_tasks_parent_id`|`parent_id`|Subtask queries, cascade deletes|
+
+**Why indexes matter:** Without an index, SQLite scans ALL rows to find matches (slow with many records). An index creates a fast lookup structure—like a book index. We create indexes on columns frequently used in `WHERE` clauses (`completed`, `parent_id`).
 
 #### Migration Considerations
 
@@ -342,11 +355,20 @@ async def run_migrations(db: aiosqlite.Connection):
 
 The MCP server exposes tools via the standard MCP protocol. ChatGPT discovers available tools via `list_tools` and invokes them via `call_tool`.
 
+**Why Input Schemas?** MCP requires each tool to define a JSON Schema for its inputs. This schema acts as a contract between ChatGPT and your tool. ChatGPT uses it to:
+
+- Know what parameters to send
+- Validate inputs before invoking
+- Provide clear error messages if something is missing
+
+Without schemas, ChatGPT wouldn't know how to call your tools correctly.
+
 #### Tool: `add_task`
 
 **Description:** Create a new task or subtask
 
 **Input Schema:**
+
 ```json
 {
   "type": "object",
@@ -367,6 +389,7 @@ The MCP server exposes tools via the standard MCP protocol. ChatGPT discovers av
 ```
 
 **Output:**
+
 ```json
 {
   "task": {
@@ -385,6 +408,7 @@ The MCP server exposes tools via the standard MCP protocol. ChatGPT discovers av
 **Description:** Retrieve tasks with optional filtering
 
 **Input Schema:**
+
 ```json
 {
   "type": "object",
@@ -404,6 +428,7 @@ The MCP server exposes tools via the standard MCP protocol. ChatGPT discovers av
 ```
 
 **Output:**
+
 ```json
 {
   "tasks": [
@@ -427,6 +452,7 @@ The MCP server exposes tools via the standard MCP protocol. ChatGPT discovers av
 **Description:** Mark a task as completed
 
 **Input Schema:**
+
 ```json
 {
   "type": "object",
@@ -441,6 +467,7 @@ The MCP server exposes tools via the standard MCP protocol. ChatGPT discovers av
 ```
 
 **Output:**
+
 ```json
 {
   "task": {
@@ -459,6 +486,7 @@ The MCP server exposes tools via the standard MCP protocol. ChatGPT discovers av
 **Description:** Remove a task and its subtasks
 
 **Input Schema:**
+
 ```json
 {
   "type": "object",
@@ -473,6 +501,7 @@ The MCP server exposes tools via the standard MCP protocol. ChatGPT discovers av
 ```
 
 **Output:**
+
 ```json
 {
   "deleted": true,
@@ -487,6 +516,7 @@ The MCP server exposes tools via the standard MCP protocol. ChatGPT discovers av
 **Description:** Break down a complex task into subtasks (ChatGPT generates the subtasks)
 
 **Input Schema:**
+
 ```json
 {
   "type": "object",
@@ -508,6 +538,7 @@ The MCP server exposes tools via the standard MCP protocol. ChatGPT discovers av
 ```
 
 **Output:**
+
 ```json
 {
   "parent_task": { "id": 1, "title": "Plan birthday party", ... },
@@ -535,12 +566,12 @@ The MCP server exposes tools via the standard MCP protocol. ChatGPT discovers av
 
 #### Error Codes
 
-| Code | HTTP Equivalent | Description |
-|------|-----------------|-------------|
-| `VALIDATION_ERROR` | 400 | Invalid input parameters |
-| `TASK_NOT_FOUND` | 404 | Task ID doesn't exist |
-| `DATABASE_ERROR` | 500 | SQLite operation failed |
-| `INTERNAL_ERROR` | 500 | Unexpected server error |
+|Code|HTTP Equivalent|Description|
+|---|---|---|
+|`VALIDATION_ERROR`|400|Invalid input parameters|
+|`TASK_NOT_FOUND`|404|Task ID doesn't exist|
+|`DATABASE_ERROR`|500|SQLite operation failed|
+|`INTERNAL_ERROR`|500|Unexpected server error|
 
 #### Error Handling Implementation
 
@@ -590,12 +621,12 @@ async def handle_tool_call(name: str, arguments: dict) -> dict:
 
 #### ChatGPT (via MCP Protocol)
 
-| Aspect | Details |
-|--------|---------|
-| **Service** | ChatGPT Client |
-| **Purpose** | Conversational interface, tool invocation, AI task decomposition |
-| **Integration Method** | MCP over Streamable HTTP |
-| **Connection** | ChatGPT initiates connection to MCP server |
+|Aspect|Details|
+|---|---|
+|**Service**|ChatGPT Client|
+|**Purpose**|Conversational interface, tool invocation, AI task decomposition|
+|**Integration Method**|MCP over Streamable HTTP|
+|**Connection**|ChatGPT initiates connection to MCP server|
 
 **Protocol Flow:**
 
@@ -614,11 +645,13 @@ sequenceDiagram
 ```
 
 **Error Handling:**
+
 - Connection errors: ChatGPT handles retry logic
 - Tool errors: Return structured error response (see §4.2)
 - Timeout: Server should respond within 2 seconds
 
 **Rate Limiting:**
+
 - Not implemented for learning project
 - Production consideration: Add rate limiting middleware
 
@@ -652,17 +685,18 @@ uvicorn src.server:app --host localhost --port 8000 --reload
 **Scope:** Not implemented for MVP (single-user local development)
 
 **Future Consideration:** If multi-user support is added, implement:
+
 - OAuth 2.0 flow via Apps SDK
 - User ID extraction from MCP context
 - Per-user task isolation
 
 ### 6.2 Data Protection
 
-| Concern | Mitigation |
-|---------|------------|
-| SQL Injection | Parameterized queries exclusively |
-| Data at Rest | SQLite file permissions (user-only read/write) |
-| Data in Transit | HTTPS in production (localhost HTTP acceptable for dev) |
+|Concern|Mitigation|
+|---|---|
+|SQL Injection|Parameterized queries exclusively|
+|Data at Rest|SQLite file permissions (user-only read/write)|
+|Data in Transit|HTTPS in production (localhost HTTP acceptable for dev)|
 
 **Parameterized Query Example:**
 
@@ -694,10 +728,10 @@ class AddTaskInput(BaseModel):
 
 ### 6.4 Secrets Management
 
-| Secret | Storage Method |
-|--------|----------------|
-| Database path | Environment variable |
-| API keys (future) | Environment variable, never in code |
+|Secret|Storage Method|
+|---|---|
+|Database path|Environment variable|
+|API keys (future)|Environment variable, never in code|
 
 **Implementation:**
 
@@ -768,11 +802,11 @@ async def test_db():
 
 ### 7.3 Mocking Strategy
 
-| Component | Mock Strategy |
-|-----------|---------------|
-| SQLite | In-memory database for integration tests |
-| MCP Protocol | Mock request/response objects |
-| UI Components | Snapshot testing for HTML output |
+|Component|Mock Strategy|
+|---|---|
+|SQLite|In-memory database for integration tests|
+|MCP Protocol|Mock request/response objects|
+|UI Components|Snapshot testing for HTML output|
 
 **UI Snapshot Testing:**
 
@@ -808,48 +842,48 @@ tests/
 
 #### Phase 1: Foundation (Week 1)
 
-| Task | Description | Deliverable |
-|------|-------------|-------------|
-| 1.1 | Project setup | `pyproject.toml`, directory structure, dev dependencies |
-| 1.2 | Database layer | SQLite connection, schema creation, Task model |
-| 1.3 | MCP server skeleton | Basic server with uvicorn, health check endpoint |
-| 1.4 | `add_task` tool | Schema, handler, basic inline card |
-| 1.5 | `list_tasks` tool | Schema, handler, list display |
+|Task|Description|Deliverable|
+|---|---|---|
+|1.1|Project setup|`pyproject.toml`, directory structure, dev dependencies|
+|1.2|Database layer|SQLite connection, schema creation, Task model|
+|1.3|MCP server skeleton|Basic server with uvicorn, health check endpoint|
+|1.4|`add_task` tool|Schema, handler, basic inline card|
+|1.5|`list_tasks` tool|Schema, handler, list display|
 
 **Milestone:** Can add tasks via MCP and see them listed
 
 #### Phase 2: Core CRUD (Week 2)
 
-| Task | Description | Deliverable |
-|------|-------------|-------------|
-| 2.1 | `complete_task` tool | Toggle completion status |
-| 2.2 | `delete_task` tool | Remove task with confirmation |
-| 2.3 | Task filtering | Filter by complete/incomplete |
-| 2.4 | Improved UI cards | Action buttons, status indicators |
-| 2.5 | Error handling | Structured error responses |
+|Task|Description|Deliverable|
+|---|---|---|
+|2.1|`complete_task` tool|Toggle completion status|
+|2.2|`delete_task` tool|Remove task with confirmation|
+|2.3|Task filtering|Filter by complete/incomplete|
+|2.4|Improved UI cards|Action buttons, status indicators|
+|2.5|Error handling|Structured error responses|
 
 **Milestone:** Full CRUD operations working with polished UI
 
 #### Phase 3: AI Features (Week 3)
 
-| Task | Description | Deliverable |
-|------|-------------|-------------|
-| 3.1 | Subtask data model | `parent_id` implementation, cascade delete |
-| 3.2 | `decompose_task` tool | Accept subtask titles, create hierarchy |
-| 3.3 | Hierarchical display | Render parent/child relationships |
-| 3.4 | Subtask operations | Complete/delete individual subtasks |
+|Task|Description|Deliverable|
+|---|---|---|
+|3.1|Subtask data model|`parent_id` implementation, cascade delete|
+|3.2|`decompose_task` tool|Accept subtask titles, create hierarchy|
+|3.3|Hierarchical display|Render parent/child relationships|
+|3.4|Subtask operations|Complete/delete individual subtasks|
 
 **Milestone:** Task decomposition working end-to-end
 
 #### Phase 4: Polish (Week 4)
 
-| Task | Description | Deliverable |
-|------|-------------|-------------|
-| 4.1 | Documentation | README, inline comments, docstrings |
-| 4.2 | Testing | Unit tests, integration tests |
-| 4.3 | Code cleanup | Linting, type checking, refactoring |
-| 4.4 | Edge cases | Empty states, error messages |
-| 4.5 | Final review | Manual testing, documentation review |
+|Task|Description|Deliverable|
+|---|---|---|
+|4.1|Documentation|README, inline comments, docstrings|
+|4.2|Testing|Unit tests, integration tests|
+|4.3|Code cleanup|Linting, type checking, refactoring|
+|4.4|Edge cases|Empty states, error messages|
+|4.5|Final review|Manual testing, documentation review|
 
 **Milestone:** Production-ready codebase with comprehensive documentation
 
@@ -881,13 +915,13 @@ gantt
 
 ### 8.3 Technical Risks
 
-| Risk | Probability | Impact | Mitigation |
-|------|-------------|--------|------------|
-| Apps SDK API changes during development | Medium | High | Pin SDK version, monitor changelog |
-| MCP protocol complexity | Low | Medium | Follow official examples closely |
-| Async SQLite issues | Low | Medium | Use well-tested `aiosqlite` library |
-| Inline card rendering issues | Medium | Medium | Test early with ChatGPT, iterate on UI |
-| Local development environment setup | Medium | Low | Document setup thoroughly, provide troubleshooting guide |
+|Risk|Probability|Impact|Mitigation|
+|---|---|---|---|
+|Apps SDK API changes during development|Medium|High|Pin SDK version, monitor changelog|
+|MCP protocol complexity|Low|Medium|Follow official examples closely|
+|Async SQLite issues|Low|Medium|Use well-tested `aiosqlite` library|
+|Inline card rendering issues|Medium|Medium|Test early with ChatGPT, iterate on UI|
+|Local development environment setup|Medium|Low|Document setup thoroughly, provide troubleshooting guide|
 
 ---
 
@@ -902,6 +936,7 @@ The MCP specification supports multiple transport protocols: stdio, Streamable H
 Use Streamable HTTP transport for the MCP server.
 
 **Consequences:**
+
 - ✅ Recommended by Apps SDK documentation
 - ✅ Supports bidirectional communication for real-time UI updates
 - ✅ Works with standard HTTP infrastructure
@@ -909,6 +944,7 @@ Use Streamable HTTP transport for the MCP server.
 - ❌ Slightly more complex than stdio (requires HTTP server)
 
 **Alternatives Considered:**
+
 - **stdio:** Simpler but not supported by ChatGPT client
 - **SSE:** Deprecated in favor of Streamable HTTP
 
@@ -923,6 +959,7 @@ The application needs to persist tasks across sessions. Options include SQLite, 
 Use SQLite for local data persistence.
 
 **Consequences:**
+
 - ✅ Zero configuration—no database server to manage
 - ✅ Built into Python standard library
 - ✅ ACID-compliant, handles concurrent reads well
@@ -932,6 +969,7 @@ Use SQLite for local data persistence.
 - ❌ Limited concurrent write performance
 
 **Alternatives Considered:**
+
 - **JSON file:** No query capability, manual indexing required
 - **PostgreSQL:** Overkill for learning project, requires server setup
 - **Cloud DB (e.g., Supabase):** Adds complexity, requires internet
@@ -947,6 +985,7 @@ MCP tools require JSON Schema definitions for input validation. We need a robust
 Use Pydantic 2.x for data models and automatic JSON Schema generation.
 
 **Consequences:**
+
 - ✅ Single source of truth for models and schemas
 - ✅ Runtime validation with clear error messages
 - ✅ Automatic JSON Schema generation via `.model_json_schema()`
@@ -955,6 +994,7 @@ Use Pydantic 2.x for data models and automatic JSON Schema generation.
 - ❌ Additional dependency (though widely used)
 
 **Alternatives Considered:**
+
 - **dataclasses + manual schemas:** More boilerplate, schema drift risk
 - **marshmallow:** Less ergonomic than Pydantic 2.x
 - **attrs:** Good, but Pydantic has better JSON Schema support
@@ -970,6 +1010,7 @@ The codebase needs a clear structure that separates concerns and is easy for lea
 Implement a layered architecture with distinct layers for tools, database, and UI.
 
 **Consequences:**
+
 - ✅ Clear separation of concerns
 - ✅ Each layer can be tested independently
 - ✅ Easy to understand for developers learning the SDK
@@ -978,6 +1019,7 @@ Implement a layered architecture with distinct layers for tools, database, and U
 - ❌ Some indirection between layers
 
 **Alternatives Considered:**
+
 - **Single module:** Simpler but harder to maintain and test
 - **Hexagonal architecture:** Too complex for learning project
 - **Feature-based structure:** Less intuitive for SDK learning
@@ -993,6 +1035,7 @@ The Apps SDK supports multiple UI paradigms: inline cards, carousels, and fullsc
 Use inline cards as the primary UI component, with lists for multiple tasks.
 
 **Consequences:**
+
 - ✅ Lightweight, renders within conversation flow
 - ✅ Follows Apps SDK UI guidelines
 - ✅ Sufficient for MVP task management
@@ -1001,6 +1044,7 @@ Use inline cards as the primary UI component, with lists for multiple tasks.
 - ❌ May need fullscreen view for 10+ tasks (future enhancement)
 
 **Alternatives Considered:**
+
 - **Fullscreen view only:** Disrupts conversation flow
 - **Text-only responses:** Poor UX for task management
 - **Carousel:** Good for many tasks, but adds complexity
@@ -1016,6 +1060,7 @@ The `decompose_task` feature needs to generate contextually relevant subtasks. W
 ChatGPT generates subtask titles; the MCP server only persists them.
 
 **Consequences:**
+
 - ✅ Leverages ChatGPT's superior language understanding
 - ✅ Contextual subtasks based on conversation history
 - ✅ Simpler MCP server implementation
@@ -1023,8 +1068,7 @@ ChatGPT generates subtask titles; the MCP server only persists them.
 - ❌ Less control over subtask quality
 - ❌ Requires clear tool description for consistent results
 
-**Implementation:**
-The `decompose_task` tool accepts an array of subtask titles generated by ChatGPT:
+**Implementation:** The `decompose_task` tool accepts an array of subtask titles generated by ChatGPT:
 
 ```
 User: "Break down 'Plan birthday party' into subtasks"
@@ -1036,6 +1080,7 @@ ChatGPT: [reasons about subtasks, then calls tool]
 ```
 
 **Alternatives Considered:**
+
 - **MCP server calls OpenAI API:** Additional complexity, API costs, latency
 - **Hardcoded subtask templates:** Inflexible, poor UX
 
@@ -1085,12 +1130,12 @@ chatgpt-todo-app/
 
 ### B. Environment Variables
 
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `DATABASE_PATH` | No | `~/.chatgpt-todo/tasks.db` | SQLite database file path |
-| `MCP_SERVER_HOST` | No | `localhost` | Server bind host |
-| `MCP_SERVER_PORT` | No | `8000` | Server bind port |
-| `LOG_LEVEL` | No | `INFO` | Logging verbosity |
+|Variable|Required|Default|Description|
+|---|---|---|---|
+|`DATABASE_PATH`|No|`~/.chatgpt-todo/tasks.db`|SQLite database file path|
+|`MCP_SERVER_HOST`|No|`localhost`|Server bind host|
+|`MCP_SERVER_PORT`|No|`8000`|Server bind port|
+|`LOG_LEVEL`|No|`INFO`|Logging verbosity|
 
 ### C. Useful Commands
 
@@ -1109,15 +1154,15 @@ sqlite3 ~/.chatgpt-todo/tasks.db ".schema" # View schema
 
 ### D. Reference Links
 
-| Resource | URL |
-|----------|-----|
-| OpenAI Apps SDK | https://developers.openai.com/apps-sdk/ |
-| MCP Specification | https://modelcontextprotocol.io/specification |
-| Python MCP SDK | https://github.com/modelcontextprotocol/python-sdk |
-| Apps SDK UI Guidelines | https://developers.openai.com/apps-sdk/concepts/ui-guidelines |
-| Pydantic Documentation | https://docs.pydantic.dev/ |
-| uvicorn Documentation | https://www.uvicorn.org/ |
+|Resource|URL|
+|---|---|
+|OpenAI Apps SDK|https://developers.openai.com/apps-sdk/|
+|MCP Specification|https://modelcontextprotocol.io/specification|
+|Python MCP SDK|https://github.com/modelcontextprotocol/python-sdk|
+|Apps SDK UI Guidelines|https://developers.openai.com/apps-sdk/concepts/ui-guidelines|
+|Pydantic Documentation|https://docs.pydantic.dev/|
+|uvicorn Documentation|https://www.uvicorn.org/|
 
 ---
 
-*Document prepared for learning purposes. Not intended for production deployment.*
+_Document prepared for learning purposes. Not intended for production deployment._
