@@ -211,48 +211,13 @@ CREATE TABLE tasks (
 
 ## 5. Non-Functional Requirements
 
-### 5.1 Performance
+| Requirement | Target |
+|-------------|--------|
+| Response time | < 2 seconds for all operations |
+| Security | API keys in environment variables, parameterized SQL queries |
+| Code style | PEP 8, documented functions |
 
-|**Requirement**|**Target**|**Measurement**|
-|---|---|---|
-|Tool response time|< 500ms for CRUD operations|Time from `call_tool` to response|
-|Database query time|< 100ms for list queries|SQLite query execution|
-|Startup time|< 3 seconds|Server ready to accept connections|
-|Memory footprint|< 100MB during normal operation|Process memory usage|
-
-### 5.2 Security
-
-|**Requirement**|**Implementation**|
-|---|---|
-|Input validation|Validate all tool parameters against JSON Schema|
-|SQL injection prevention|Use parameterized queries exclusively|
-|Data isolation|SQLite file permissions restricted to owner|
-|No sensitive data logging|Task content not logged at INFO level|
-
-### 5.3 Reliability
-
-|**Requirement**|**Implementation**|
-|---|---|
-|Graceful error handling|All tools return structured error responses|
-|Database integrity|Use transactions for multi-step operations|
-|Connection recovery|Auto-reconnect on database connection loss|
-
-### 5.4 Maintainability
-
-|**Requirement**|**Implementation**|
-|---|---|
-|Code organization|Separate modules: server, tools, database, models|
-|Documentation|README, inline comments, docstrings|
-|Dependency management|requirements.txt with pinned versions|
-|Code style|PEP 8 compliance, black formatting|
-
-### 5.5 Compatibility
-
-|**Requirement**|**Target**|
-|---|---|
-|Python version|3.10+|
-|Operating systems|macOS, Linux, Windows (WSL)|
-|ChatGPT clients|Web, iOS, Android (via Apps SDK)|
+*Note: This is a learning project. Production-grade NFRs (high availability, scalability, monitoring) are out of scope.*
 
 ---
 
@@ -276,10 +241,10 @@ CREATE TABLE tasks (
 │         │                │                                 │    │
 │         └────────────────┼─────────────────────────────────┘    │
 │                          ▼                                      │
-│                   ┌─────────────┐                                │
-│                   │  SQLite DB  │                                │
-│                   │  (tasks.db) │                                │
-│                   └─────────────┘                                │
+│                   ┌─────────────┐                               │
+│                   │  SQLite DB  │                               │
+│                   │  (tasks.db) │                               │
+│                   └─────────────┘                               │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
