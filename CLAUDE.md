@@ -230,14 +230,15 @@ async def test_add_task(task_repo):
     assert "ui" in result
 ```
 
-## Current Tasks (Week 1)
+## Implementation Order
 
-- [x] Project setup (pyproject.toml, structure)
-- [ ] Database layer (connection.py, models.py)
-- [ ] MCP server skeleton (server.py)
-- [ ] `add_task` tool
-- [ ] `list_tasks` tool
-- [ ] Basic inline card UI
+1. [ ] Dependencies (pyproject.toml, requirements.txt)
+2. [ ] Configuration (config.py, .env.example)
+3. [ ] Database layer (connection.py, models.py)
+4. [ ] Tools layer (schemas.py, task_tools.py)
+5. [ ] UI layer (components.py)
+6. [ ] Server (server.py)
+7. [ ] Tests
 
 ## Error Handling
 

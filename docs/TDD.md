@@ -2,7 +2,7 @@
 
 ## ChatGPT ToDo App with AI Task Decomposition
 
-|**Document Version**|1.0|
+|**Document Version**|1.1|
 |---|---|
 |**Last Updated**|January 2026|
 |**Status**|Draft|
@@ -840,52 +840,45 @@ tests/
 
 ### 8.1 Implementation Phases
 
-#### Phase 1: Foundation (Week 1)
+#### Phase 1: Infrastructure (Week 1)
 
-|Task|Description|Deliverable|
-|---|---|---|
-|1.1|Project setup|`pyproject.toml`, directory structure, dev dependencies|
-|1.2|Database layer|SQLite connection, schema creation, Task model|
-|1.3|MCP server skeleton|Basic server with uvicorn, health check endpoint|
-|1.4|`add_task` tool|Schema, handler, basic inline card|
-|1.5|`list_tasks` tool|Schema, handler, list display|
+|Task|Deliverable|
+|---|---|
+|1.1|Dependencies: pyproject.toml, requirements.txt|
+|1.2|Configuration: config.py, .env.example|
+|1.3|Database layer: connection.py, models.py, schema|
 
-**Milestone:** Can add tasks via MCP and see them listed
+**Milestone:** Project runs with empty handlers
 
-#### Phase 2: Core CRUD (Week 2)
+#### Phase 2: Application Logic (Week 2)
 
-|Task|Description|Deliverable|
-|---|---|---|
-|2.1|`complete_task` tool|Toggle completion status|
-|2.2|`delete_task` tool|Remove task with confirmation|
-|2.3|Task filtering|Filter by complete/incomplete|
-|2.4|Improved UI cards|Action buttons, status indicators|
-|2.5|Error handling|Structured error responses|
+|Task|Deliverable|
+|---|---|
+|2.1|Schemas: Pydantic models for all tools|
+|2.2|Tool handlers: add_task, list_tasks, complete_task, delete_task|
+|2.3|UI components: inline cards for tasks|
+|2.4|Server: MCP server with all tools registered|
 
-**Milestone:** Full CRUD operations working with polished UI
+**Milestone:** Full CRUD operations working
 
 #### Phase 3: AI Features (Week 3)
 
-|Task|Description|Deliverable|
-|---|---|---|
-|3.1|Subtask data model|`parent_id` implementation, cascade delete|
-|3.2|`decompose_task` tool|Accept subtask titles, create hierarchy|
-|3.3|Hierarchical display|Render parent/child relationships|
-|3.4|Subtask operations|Complete/delete individual subtasks|
+|Task|Deliverable|
+|---|---|
+|3.1|decompose_task tool|
+|3.2|Hierarchical UI for subtasks|
 
 **Milestone:** Task decomposition working end-to-end
 
-#### Phase 4: Polish (Week 4)
+#### Phase 4: Quality (Week 4)
 
-|Task|Description|Deliverable|
-|---|---|---|
-|4.1|Documentation|README, inline comments, docstrings|
-|4.2|Testing|Unit tests, integration tests|
-|4.3|Code cleanup|Linting, type checking, refactoring|
-|4.4|Edge cases|Empty states, error messages|
-|4.5|Final review|Manual testing, documentation review|
+|Task|Deliverable|
+|---|---|
+|4.1|Unit tests (schemas, models, components)|
+|4.2|Integration tests (tools + database)|
+|4.3|Documentation, linting, cleanup|
 
-**Milestone:** Production-ready codebase with comprehensive documentation
+**Milestone:** Production-ready codebase
 
 ### 8.2 Milestones
 
@@ -894,23 +887,21 @@ gantt
     title Implementation Timeline
     dateFormat  YYYY-MM-DD
     section Phase 1
-    Project Setup           :p1a, 2026-01-27, 1d
-    Database Layer          :p1b, after p1a, 2d
-    MCP Server Skeleton     :p1c, after p1b, 1d
-    add_task & list_tasks   :p1d, after p1c, 2d
+    Dependencies            :p1a, 2026-01-27, 1d
+    Configuration           :p1b, after p1a, 1d
+    Database Layer          :p1c, after p1b, 3d
     section Phase 2
-    complete_task           :p2a, 2026-02-03, 1d
-    delete_task             :p2b, after p2a, 1d
-    Filtering & UI          :p2c, after p2b, 2d
-    Error Handling          :p2d, after p2c, 1d
+    Schemas                 :p2a, 2026-02-03, 1d
+    Tool Handlers           :p2b, after p2a, 3d
+    UI Components           :p2c, after p2b, 1d
+    Server Integration      :p2d, after p2c, 1d
     section Phase 3
-    Subtask Model           :p3a, 2026-02-10, 2d
-    decompose_task          :p3b, after p3a, 2d
-    Hierarchical UI         :p3c, after p3b, 2d
+    decompose_task          :p3a, 2026-02-10, 3d
+    Hierarchical UI         :p3b, after p3a, 2d
     section Phase 4
-    Documentation           :p4a, 2026-02-17, 2d
-    Testing                 :p4b, after p4a, 2d
-    Final Polish            :p4c, after p4b, 2d
+    Unit Tests              :p4a, 2026-02-17, 2d
+    Integration Tests       :p4b, after p4a, 2d
+    Documentation           :p4c, after p4b, 2d
 ```
 
 ### 8.3 Technical Risks
@@ -1083,6 +1074,39 @@ ChatGPT: [reasons about subtasks, then calls tool]
 
 - **MCP server calls OpenAI API:** Additional complexity, API costs, latency
 - **Hardcoded subtask templates:** Inflexible, poor UX
+
+---
+
+### ADR-007: Horizontal Implementation Approach
+
+**Context:**  
+We need to decide the order of implementation: vertical (feature by feature, each complete end-to-end) or horizontal (layer by layer, infrastructure first).
+
+**Decision:**  
+Use horizontal implementation: build infrastructure layers first, then application logic.
+
+**Consequences:**
+
+- ✅ Solid foundation before writing business logic
+- ✅ Dependencies are resolved before they're needed
+- ✅ Easier to understand for learning purposes
+- ✅ Clear progression from setup to code
+- ❌ Nothing "works" until later phases
+- ❌ Delayed feedback on end-to-end functionality
+
+**Implementation Order:**
+
+1. Dependencies (pyproject.toml, requirements.txt)
+2. Configuration (config.py, .env.example)
+3. Database layer (connection.py, models.py)
+4. Tools layer (schemas.py, task_tools.py)
+5. UI layer (components.py)
+6. Server (server.py)
+7. Tests
+
+**Alternatives Considered:**
+
+- **Vertical:** Implement `add_task` completely (schema → handler → db → ui), then `list_tasks`, etc. Provides working features faster but requires jumping between layers.
 
 ---
 
