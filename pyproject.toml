@@ -1,0 +1,36 @@
+[project]
+name = "chatgpt-todo-app"
+version = "0.1.0"
+description = "A ChatGPT-integrated ToDo application using the OpenAI Apps SDK with MCP"
+requires-python = ">=3.10"
+dependencies = [
+    "mcp",
+    "pydantic>=2.0,<3.0",
+    "uvicorn>=0.27",
+    "aiosqlite",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio",
+    "pytest-cov",
+    "ruff",
+    "mypy",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+
+[tool.ruff]
+target-version = "py310"
+src = ["src"]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
