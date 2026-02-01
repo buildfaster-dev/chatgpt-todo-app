@@ -233,7 +233,7 @@ async def test_add_task(task_repo):
 ## Implementation Order
 
 1. [x] Dependencies (pyproject.toml, requirements.txt)
-2. [ ] Configuration (config.py, .env.example)
+2. [x] Configuration (config.py, .env.example)
 3. [ ] Database layer (connection.py, models.py)
 4. [ ] Tools layer (schemas.py, task_tools.py)
 5. [ ] UI layer (components.py)
