@@ -35,7 +35,10 @@ class TaskCreate(TaskBase):
     @field_validator("title")
     @classmethod
     def sanitize_title(cls, v: str) -> str:
-        return v.strip()
+        stripped = v.strip()
+        if not stripped:
+            raise ValueError("title cannot be empty or whitespace only")
+        return stripped
 
 
 class Task(TaskBase):
@@ -58,7 +61,10 @@ class AddTaskInput(BaseModel):
     @field_validator("title")
     @classmethod
     def sanitize_title(cls, v: str) -> str:
-        return v.strip()
+        stripped = v.strip()
+        if not stripped:
+            raise ValueError("title cannot be empty or whitespace only")
+        return stripped
 
 
 class ListTasksInput(BaseModel):
