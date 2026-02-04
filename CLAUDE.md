@@ -235,7 +235,7 @@ async def test_add_task(task_repo):
 1. [x] Dependencies (pyproject.toml, requirements.txt)
 2. [x] Configuration (config.py, .env.example)
 3. [x] Database layer (connection.py, models.py)
-4. [ ] Tools layer (schemas.py, task_tools.py)
+4. [x] Tools layer (schemas.py, task_tools.py)
 5. [ ] UI layer (components.py)
 6. [ ] Server (server.py)
 7. [ ] Tests
