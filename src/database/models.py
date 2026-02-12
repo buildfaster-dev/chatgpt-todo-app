@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 import aiosqlite
 
 
@@ -9,21 +11,24 @@ class TaskRepository:
     def __init__(self, db: aiosqlite.Connection) -> None:
         self.db = db
 
-    async def create(self, title: str, parent_id: int | None = None) -> dict:
+    async def create(self, title: str, parent_id: int | None = None) -> dict[str, Any]:
         """Create a new task and return it as a dict."""
         cursor = await self.db.execute(
             "INSERT INTO tasks (title, parent_id) VALUES (?, ?)",
             (title, parent_id),
         )
         await self.db.commit()
-        return await self.get_by_id(cursor.lastrowid)
+        assert cursor.lastrowid is not None
+        task = await self.get_by_id(cursor.lastrowid)
+        assert task is not None
+        return task
 
     async def get_all(
         self, filter: str = "all", parent_id: int | None = None
-    ) -> list[dict]:
+    ) -> list[dict[str, Any]]:
         """Return tasks matching the filter and optional parent_id."""
         clauses: list[str] = []
-        params: list = []
+        params: list[Any] = []
 
         if filter == "complete":
             clauses.append("completed = 1")
@@ -41,7 +46,7 @@ class TaskRepository:
         rows = await cursor.fetchall()
         return [dict(row) for row in rows]
 
-    async def get_by_id(self, task_id: int) -> dict | None:
+    async def get_by_id(self, task_id: int) -> dict[str, Any] | None:
         """Return a single task by ID, or None if not found."""
         cursor = await self.db.execute(
             "SELECT * FROM tasks WHERE id = ?", (task_id,)
@@ -49,7 +54,7 @@ class TaskRepository:
         row = await cursor.fetchone()
         return dict(row) if row else None
 
-    async def update_completed(self, task_id: int, completed: bool) -> dict | None:
+    async def update_completed(self, task_id: int, completed: bool) -> dict[str, Any] | None:
         """Mark a task as completed or incomplete. Returns updated task or None."""
         await self.db.execute(
             "UPDATE tasks SET completed = ? WHERE id = ?",
@@ -68,7 +73,7 @@ class TaskRepository:
 
     async def create_subtasks(
         self, parent_id: int, titles: list[str]
-    ) -> list[dict]:
+    ) -> list[dict[str, Any]]:
         """Create multiple subtasks under a parent. Returns the created subtasks."""
         subtasks = []
         for title in titles:

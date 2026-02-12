@@ -7,6 +7,7 @@ Supports light/dark mode via CSS variables and includes proper HTML escaping.
 from __future__ import annotations
 
 import html
+from typing import Any
 
 # CSS styles with light/dark mode support via CSS variables
 _STYLES = """
@@ -112,7 +113,7 @@ _STYLES = """
 """
 
 
-def render_task_card(task: dict) -> str:
+def render_task_card(task: dict[str, Any]) -> str:
     """Render a single task as an inline card."""
     title = html.escape(task["title"])
     completed = task.get("completed", False)
@@ -128,7 +129,7 @@ def render_task_card(task: dict) -> str:
 </inline-card>"""
 
 
-def render_task_list(tasks: list[dict]) -> str:
+def render_task_list(tasks: list[dict[str, Any]]) -> str:
     """Render a list of tasks as an inline card."""
     if not tasks:
         return f"""<inline-card>
@@ -157,7 +158,7 @@ def render_task_list(tasks: list[dict]) -> str:
 </inline-card>"""
 
 
-def render_confirmation(message: str, task: dict | None = None) -> str:
+def render_confirmation(message: str, task: dict[str, Any] | None = None) -> str:
     """Render a confirmation message as an inline card."""
     escaped_message = html.escape(message)
 
@@ -175,7 +176,7 @@ def render_confirmation(message: str, task: dict | None = None) -> str:
 </inline-card>"""
 
 
-def render_task_hierarchy(parent: dict, subtasks: list[dict]) -> str:
+def render_task_hierarchy(parent: dict[str, Any], subtasks: list[dict[str, Any]]) -> str:
     """Render a parent task with its subtasks as an inline card."""
     parent_title = html.escape(parent["title"])
 

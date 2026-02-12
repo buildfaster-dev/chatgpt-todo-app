@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from pydantic import ValidationError
 
@@ -29,12 +29,12 @@ class TaskNotFoundError(Exception):
         super().__init__(f"Task with ID {task_id} does not exist")
 
 
-def _error_response(code: ErrorCode, message: str, details: dict | None = None) -> dict:
+def _error_response(code: ErrorCode, message: str, details: dict[str, Any] | None = None) -> dict[str, Any]:
     """Build a standardized error response."""
     return {"error": ToolError(code=code, message=message, details=details).model_dump()}
 
 
-async def add_task_handler(args: dict, repo: TaskRepository) -> dict:
+async def add_task_handler(args: dict[str, Any], repo: TaskRepository) -> dict[str, Any]:
     """Create a new task or subtask."""
     validated = AddTaskInput(**args)
 
@@ -50,7 +50,7 @@ async def add_task_handler(args: dict, repo: TaskRepository) -> dict:
     }
 
 
-async def list_tasks_handler(args: dict, repo: TaskRepository) -> dict:
+async def list_tasks_handler(args: dict[str, Any], repo: TaskRepository) -> dict[str, Any]:
     """Retrieve tasks with optional filtering."""
     validated = ListTasksInput(**args)
 
@@ -63,7 +63,7 @@ async def list_tasks_handler(args: dict, repo: TaskRepository) -> dict:
     }
 
 
-async def complete_task_handler(args: dict, repo: TaskRepository) -> dict:
+async def complete_task_handler(args: dict[str, Any], repo: TaskRepository) -> dict[str, Any]:
     """Mark a task as completed."""
     validated = CompleteTaskInput(**args)
 
@@ -72,13 +72,14 @@ async def complete_task_handler(args: dict, repo: TaskRepository) -> dict:
         raise TaskNotFoundError(validated.task_id)
 
     updated = await repo.update_completed(validated.task_id, completed=True)
+    assert updated is not None
     return {
         "task": updated,
         "ui": f"<inline-card>Task completed: {updated['title']}</inline-card>",
     }
 
 
-async def delete_task_handler(args: dict, repo: TaskRepository) -> dict:
+async def delete_task_handler(args: dict[str, Any], repo: TaskRepository) -> dict[str, Any]:
     """Delete a task and its subtasks."""
     validated = DeleteTaskInput(**args)
 
@@ -94,11 +95,11 @@ async def delete_task_handler(args: dict, repo: TaskRepository) -> dict:
         "deleted": True,
         "task_id": validated.task_id,
         "subtasks_deleted": subtasks_count,
-        "ui": f"<inline-card>Task deleted</inline-card>",
+        "ui": "<inline-card>Task deleted</inline-card>",
     }
 
 
-async def decompose_task_handler(args: dict, repo: TaskRepository) -> dict:
+async def decompose_task_handler(args: dict[str, Any], repo: TaskRepository) -> dict[str, Any]:
     """Break down a task into subtasks."""
     validated = DecomposeTaskInput(**args)
 
@@ -114,7 +115,7 @@ async def decompose_task_handler(args: dict, repo: TaskRepository) -> dict:
     }
 
 
-async def handle_tool_call(name: str, args: dict, repo: TaskRepository) -> dict:
+async def handle_tool_call(name: str, args: dict[str, Any], repo: TaskRepository) -> dict[str, Any]:
     """Dispatch a tool call to the appropriate handler with error handling."""
     handlers = {
         "add_task": add_task_handler,
@@ -146,7 +147,7 @@ async def handle_tool_call(name: str, args: dict, repo: TaskRepository) -> dict:
             "Invalid input",
             details={"errors": e.errors()},
         )
-    except Exception as e:
+    except Exception:
         logger.exception("Unexpected error in tool call")
         return _error_response(
             ErrorCode.INTERNAL_ERROR,

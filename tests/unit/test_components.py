@@ -1,5 +1,3 @@
-import pytest
-
 from src.ui.components import (
     render_confirmation,
     render_task_card,

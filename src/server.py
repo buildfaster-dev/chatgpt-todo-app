@@ -11,6 +11,7 @@ import json
 import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
+from collections.abc import AsyncIterator
 from typing import Any
 
 from mcp.server.fastmcp import Context, FastMCP
@@ -28,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
-async def lifespan(server: FastMCP):
+async def lifespan(server: FastMCP[TaskRepository]) -> AsyncIterator[TaskRepository]:
     """Manage database connection lifecycle."""
     db_path = str(DATABASE_PATH)
     Path(db_path).parent.mkdir(parents=True, exist_ok=True)
@@ -50,20 +51,21 @@ mcp = FastMCP(
     instructions="Manage your tasks conversationally. You can add, list, complete, delete, and decompose tasks.",
     host=MCP_SERVER_HOST,
     port=MCP_SERVER_PORT,
-    log_level=LOG_LEVEL,
+    log_level=LOG_LEVEL,  # type: ignore[arg-type]
     lifespan=lifespan,
 )
 
 
-def _get_repo(ctx: Context) -> TaskRepository:
+def _get_repo(ctx: Context[Any, Any, Any]) -> TaskRepository:
     """Retrieve the TaskRepository from the server lifespan context."""
-    return ctx.request_context.lifespan_context
+    repo: TaskRepository = ctx.request_context.lifespan_context
+    return repo
 
 
 @mcp.tool()
 async def add_task(
     title: str,
-    ctx: Context,
+    ctx: Context[Any, Any, Any],
     parent_id: int | None = None,
 ) -> str:
     """Create a new task or subtask.
@@ -83,7 +85,7 @@ async def add_task(
 
 @mcp.tool()
 async def list_tasks(
-    ctx: Context,
+    ctx: Context[Any, Any, Any],
     filter: str = "all",
     parent_id: int | None = None,
 ) -> str:
@@ -103,7 +105,7 @@ async def list_tasks(
 
 
 @mcp.tool()
-async def complete_task(task_id: int, ctx: Context) -> str:
+async def complete_task(task_id: int, ctx: Context[Any, Any, Any]) -> str:
     """Mark a task as completed.
 
     Args:
@@ -116,7 +118,7 @@ async def complete_task(task_id: int, ctx: Context) -> str:
 
 
 @mcp.tool()
-async def delete_task(task_id: int, ctx: Context) -> str:
+async def delete_task(task_id: int, ctx: Context[Any, Any, Any]) -> str:
     """Remove a task and its subtasks.
 
     Args:
@@ -132,7 +134,7 @@ async def delete_task(task_id: int, ctx: Context) -> str:
 async def decompose_task(
     task_id: int,
     subtask_titles: list[str],
-    ctx: Context,
+    ctx: Context[Any, Any, Any],
 ) -> str:
     """Break down a complex task into subtasks. ChatGPT generates the subtask titles.
 
