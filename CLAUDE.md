@@ -238,7 +238,7 @@ async def test_add_task(task_repo):
 4. [x] Tools layer (schemas.py, task_tools.py)
 5. [x] UI layer (components.py)
 6. [x] Server (server.py)
-7. [ ] Tests
+7. [x] Tests
 
 ## Error Handling
 
